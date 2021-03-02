@@ -1,0 +1,84 @@
+import pygame
+import random
+
+# initializing the pygame
+pygame.init()
+
+# making the screen
+screen = pygame.display.set_mode((800, 600))
+
+# making the player
+playerImage = pygame.image.load("space-invaders.png")
+playerX = 334
+playerY = 512
+playerX_change = 0
+
+#making the enemy
+enemyImage = pygame.image.load("enemy.png")
+enemyX = random.randint(0, 736)
+enemyY = random.randint(0, 180)
+enemyX_change = 1
+enemyY_change = 40
+
+#drawing the enemy
+def draw_enemy(x, y):
+    screen.blit(enemyImage, (x, y))
+
+
+# drawing the player:
+def draw_player(x, y):
+    screen.blit(playerImage, (x, y))
+
+
+# the background
+backgroundImage = pygame.image.load("bg.png")
+
+# game loop
+running = True
+while running:
+    screen.fill((0, 0, 0))
+    screen.blit(backgroundImage, (0, 0))
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                playerX_change -= 1.5
+            elif event.key == pygame.K_RIGHT:
+                playerX_change += 1.5
+
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                playerX_change = 0
+
+    # updating the enemy x, y
+
+    enemyX += enemyX_change
+
+    #moving the enemy
+    if enemyX<0:
+        enemyX_change = 1.1
+        enemyY += enemyY_change
+
+
+    if enemyX>736:
+        enemyX_change= -1.1
+        enemyY += enemyY_change
+
+
+
+    # updating the player placement after keypress
+    playerX += playerX_change
+
+
+    # player boundary
+    if playerX < 0:
+        playerX = 0
+    if playerX > 736:
+        playerX = 736
+
+    draw_player(playerX, playerY)
+    draw_enemy(enemyX, enemyY)
+    pygame.display.update()
