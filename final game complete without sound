@@ -1,0 +1,161 @@
+import pygame
+import random
+import math
+
+
+# initializing the pygame
+pygame.init()
+
+# font:
+score = 0
+score_font = pygame.font.Font("freesansbold.ttf", 32)
+game_over_font = pygame.font.Font("freesansbold.ttf", 70)
+game_over_text = game_over_font.render("GAME OVER", True, (255,255,255), False)
+over_distance = 0
+
+# drawing the fonts
+def draw_score(score):
+    score_text = score_font.render("score: " + str(score), True, (255, 255, 255), False)
+    screen.blit(score_text, (10, 10))
+
+
+# making the screen
+screen = pygame.display.set_mode((800, 600))
+
+# making the player
+playerImage = pygame.image.load("space-invaders.png")
+playerX = 334
+playerY = 512
+playerX_change = 0
+
+# making the enemy
+enemyImage = []
+enemyX = []
+enemyY = []
+enemyX_change = []
+enemyY_change = []
+enemy_number = 5
+for i in range(enemy_number):
+    enemyImage.append(pygame.image.load("enemy.png"))
+    enemyX.append(random.randint(0, 736))
+    enemyY.append(random.randint(30, 180))
+    enemyX_change.append(1)
+    enemyY_change.append(40)
+
+# making the bullet
+bulletImage = pygame.image.load("bullet.png")
+bullet_state = "ready"
+bulletX = 334
+bulletY = 510
+bulletY_change = 3
+
+
+# collision detection:
+def isCollision(bx, by, ex, ey):
+    if math.sqrt(math.pow((bx - ex), 2) + math.pow((by - ey), 2)) < 17:
+        return True
+    return False
+
+
+# drawing the bullet:
+def draw_bullet(x, y):
+    screen.blit(bulletImage, (x, y))
+
+
+# drawing the enemy
+def draw_enemy(i, x, y):
+    screen.blit(enemyImage[i], (x, y))
+
+
+# drawing the player:
+def draw_player(x, y):
+    screen.blit(playerImage, (x, y))
+
+
+# the background
+backgroundImage = pygame.image.load("bg.png")
+
+# game loop
+running = True
+while running:
+    screen.fill((0, 0, 0))
+    screen.blit(backgroundImage, (0, 0))
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                playerX_change -= 1.5
+            if event.key == pygame.K_RIGHT:
+                playerX_change += 1.5
+
+            if event.key == pygame.K_SPACE:
+                bullet_state = "fire"
+
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                playerX_change = 0
+
+    # updating the bullet movement:
+    if bullet_state == "fire":
+        bulletY -= bulletY_change
+        draw_bullet(bulletX, bulletY)
+        if bulletY < 30:
+            bullet_state = "ready"
+            bulletY = 510
+
+    # keeping the bulletx the initial value:
+    if bullet_state == "ready":
+        bulletY = 510
+        bulletX = playerX
+
+
+    #the enemy list loop:
+    for i in range(enemy_number):
+
+        # updating the enemy x, y
+
+        enemyX[i] += enemyX_change[i]
+
+        # moving the enemy
+        if enemyX[i] < 0:
+            enemyX_change[i] = 1.1
+            enemyY[i] += enemyY_change[i]
+
+        if enemyX[i] > 736:
+            enemyX_change[i] = -1.1
+            enemyY[i] += enemyY_change[i]
+
+        # collision system and respawing:
+        if isCollision(bulletX, bulletY, enemyX[i], enemyY[i]):
+            score += 1
+            enemyX[i] = random.randint(0, 736)
+            enemyY[i] = random.randint(30, 180)
+            bullet_state = "ready"
+
+        #drawing the enemy:
+        draw_enemy(i, enemyX[i], enemyY[i])
+
+        # game over:
+        over_distance = math.sqrt(math.pow((playerX - enemyX[i]), 2) + math.pow((playerY - enemyY[i]), 2))
+        if over_distance < 40 or over_distance > 1000:
+            screen.blit(game_over_text, (200, 150))
+            for i in range(enemy_number):
+                enemyY[i] = 2000
+
+
+    # updating the player placement after keypress
+    playerX += playerX_change
+
+    # player boundary
+    if playerX < 0:
+        playerX = 0
+    if playerX > 736:
+        playerX = 736
+
+    draw_player(playerX, playerY)
+
+    draw_score(score)
+    pygame.display.update()
