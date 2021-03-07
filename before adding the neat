@@ -1,0 +1,163 @@
+import os
+
+import pygame
+import math
+import random
+import time
+
+pygame.init()
+
+playerX = 334
+playerY = 512
+bulletX = 334
+bulletY = 480
+enemy_number = 5
+enemyX = random.randint(0, 736)
+enemyY = random.randint(30, 180)
+
+Win = pygame.display.set_mode((800, 600))
+
+pygame.display.set_caption("space_invaders")
+
+
+BG_IMAGE = pygame.image.load("bg.png")
+PLAYER_IMAGE = pygame.image.load("space-invaders.png")
+BULLET_IMAGE = pygame.image.load("bullet.png")
+ENEMY_IMAGE = pygame.image.load("enemy.png")
+
+
+class Player:
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.X_change = 5
+
+    def move_left(self):
+        self.x += self.X_change
+        if self.x > 736:
+            self.x = 736
+
+    def move_right(self):
+        self.x -= self.X_change
+        if self.x < 0:
+            self.x = 0
+
+    def draw(self, win):
+        win.blit(PLAYER_IMAGE, (self.x, self.y))
+
+    def get_X(self):
+        return self.x
+
+    def get_Y(self):
+        return self.y
+
+
+class Bullet:
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.changeY = 5
+
+    def move_up(self):
+        self.y -= self.changeY
+        if self.y < 0:
+            self.y = bulletY
+
+    def draw(self, win):
+        win.blit(BULLET_IMAGE, (self.x, self.y))
+
+    def get_X(self):
+        return self.x
+
+    def get_Y(self):
+        return self.y
+
+    def isCollision(self, ex, ey):
+        if math.sqrt(math.pow((self.x - ex), 2) + math.pow((self.y - ey), 2)) < 17:
+            return True
+        return False
+
+
+class Enemy:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.x_change = 3
+        self.y_change = 50
+
+    def isCollision(self, px, py):
+        if math.sqrt(math.pow((self.x - px), 2) + math.pow((self.y - py), 2)) < 17:
+            return True
+        return False
+
+    def move(self):
+        self.x += self.x_change
+        if self.x < 0:
+            self.x_change = 1
+            self.y += self.y_change
+
+        if self.x > 736:
+            self.x_change = -1
+            self.y += self.y_change
+
+    def get_X(self):
+        return self.x
+
+    def get_Y(self):
+        return self.y
+
+    def draw(self, win):
+        win.blit(ENEMY_IMAGE, (self.x, self.y))
+
+# scoring system
+score_font = pygame.font.Font("freesansbold.ttf", 32)
+
+
+def draw_score(win, score):
+    score_text = score_font.render("score: " + str(score), True, (255, 255, 255), False)
+    win.blit(score_text, (10, 10))
+
+
+
+# game loop
+def main():
+    player = Player(playerX, playerY)
+    bullet = Bullet(bulletX, bulletY)
+    enemy = Enemy(enemyX, enemyY)
+
+    score = 0
+
+    clock = pygame.time.Clock()
+    run = True
+    while run:
+        clock.tick(30)
+        Win.fill((0, 0, 0))
+        Win.blit(BG_IMAGE, (0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit()
+                run = False
+
+        bullet.move_up()
+        enemy.move()
+
+        if enemy.isCollision(player.get_X(), player.get_Y()):
+            enemy = Enemy(enemyX, enemyY)
+
+        if bullet.isCollision(enemy.get_X(), enemy.get_Y()):
+            score += 1
+            bullet = Bullet(bulletX, bulletY)
+            enemy = Enemy(enemyX, enemyY)
+
+
+
+        player.draw(Win)
+        bullet.draw(Win)
+        enemy.draw(Win)
+        draw_score(Win, score)
+        print(score)
+        pygame.display.update()
+
+main()
